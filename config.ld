@@ -1,0 +1,9 @@
+project="patch.lua"
+title="Patch.lua"
+description="A library for diffing/patching lua tables"
+format="markdown"
+file={"patch.lua"}
+dir="doc"
+sort_modules=true
+use_markdown_titles=true
+backtick_references=true

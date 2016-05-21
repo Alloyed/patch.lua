@@ -1,3 +1,4 @@
+--- @module patch
 local patch = {}
 
 local function shallow_copy(t)
@@ -57,33 +58,41 @@ function visit(orig, diff, mutate)
    end
 end
 
----
+--- The "nil" updater. When you want to set a field to nil, use this instead of
+--  nil directly.
 patch.Nil = {}
 
----
--- @param v
+--- Returns a "replace" updater. This forces patch() to replace the field with
+--  the given value. This can be used for anything, including `nil` and other.
+--  updaters.
+--  @param v the new value
 function patch.replace(v)
    return setmetatable({v = v}, replace_mt)
 end
 
---- Custom updater. Takes a function that, given an original value, returns an
---  update/transformed value.
+--- Returns a custom updater. Takes a function that, given an old value,
+--  returns an a new, updated value.
+--  @param fn the updater function
+--  @param ... extra arguments to pass to fn
 function patch.update(fn, ...)
    return setmetatable({fn = fn, n = select('#', ...), args = {...}}, update_mt)
 end
 
----
---  @param orig
---  @param diff
-function patch.apply(orig, diff)
-   return visit(orig, diff, false)
+--- Returns the patched version of the input value. Patches are a compound
+--  datatype that can be made of normal Lua values, as well as "updaters" that
+--  have specific patching strategies.
+--  @tparam any input the input value
+--  @tparam Diff patch the patch to apply
+function patch.apply(input, patch)
+   return visit(input, patch, false)
 end
 
----
---  @param orig
---  @param diff
-function patch.apply_inplace(orig, diff)
-   return visit(orig, diff, true)
+--- Applies a patch to the input value directly. This should return the same
+--  thing as patch.apply(), but the input value is left in an undefined state.
+--  @tparam any input the input value
+--  @tparam Diff patch the patch to apply
+function patch.apply_inplace(input, patch)
+   return visit(input, patch, true)
 end
 
 return patch

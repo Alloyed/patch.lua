@@ -3,10 +3,10 @@ local patch = require 'patch'
 local function test(input)
    local patched, undo = patch.apply(input.old, input.diff)
    local unpatched = patch.apply(input.new, undo)
-   it("apply", function()
+   it("can be applied", function()
       assert.same(input.new, patched)
    end)
-   it("undo", function()
+   it("can be undone", function()
       assert.same(input.old, unpatched)
    end)
 end
