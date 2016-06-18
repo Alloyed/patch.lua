@@ -15,19 +15,21 @@ local visit
 local replace_mt  = {REPLACE=true}
 local remove_i_mt = {REMOVE_I=true}
 local insert_i_mt = {INSERT_I=true}
-local update_mt   = {UPDATE=true}
+local Nil_mt      = {NIL=true}
+
+local mt_set = {
+	[replace_mt]  = 'explicit_replace',
+	[remove_i_mt] = 'remove_i',
+	[insert_i_mt] = 'insert_i',
+	[Nil_mt]      = 'replace',
+}
 
 local function update_type(orig, diff)
-	if getmetatable(diff) == replace_mt then
-		return 'explicit_replace'
-	elseif getmetatable(diff) == remove_i_mt then
-		return 'remove_i'
-	elseif getmetatable(diff) == insert_i_mt then
-		return 'insert_i'
+	local mt = getmetatable(diff)
+	if mt and mt_set[mt] then
+		return mt_set[mt]
 	elseif orig == patch.Nil then
 		return 'replace'
-	elseif getmetatable(diff) == update_mt then
-		return 'update'
 	elseif type(diff) == 'table' and type(orig) == 'table' then
 		return 'merge'
 	else
@@ -63,10 +65,6 @@ function updaters.merge(orig, diff, mutate)
 	end
 
 	return new, undo
-end
-
-function updaters.update(orig, diff)
-	return diff.fn(orig, unpack(diff.args, 1, diff.n)), patch.replace(orig)
 end
 
 function updaters.insert_i(orig, diff, mutate)
@@ -144,11 +142,11 @@ end
 
 --- The `nil` updater. When you want to set a field to nil, use this instead of
 --  nil directly.
-patch.Nil = setmetatable({}, {NIL = true})
+patch.Nil = setmetatable({}, Nil_mt)
 
 --- Returns a `replace` updater. This is the equivalent of setting the field
---  directly to the given value. This can be used for anything, including `nil`
---  and other.
+--  directly to the given value. This can be used for anything, including `nil`,
+--  whole tables, or other updaters.
 --  @param value the new value
 --  @return An opaque updater
 function patch.replace(value)
@@ -174,15 +172,30 @@ end
 --  @return An opaque updater
 function patch.insert_i(pos, value)
 	assert(pos == nil or type(pos) == 'number')
-	return setmetatable({i = pos, v = v}, insert_i_mt)
+	return setmetatable({i = pos, v = value}, insert_i_mt)
 end
 
---- Returns a custom updater. Takes a function that, given an old value,
---  returns an a new, updated value.
---  @param fn the updater function
---  @param ... extra arguments to pass to fn
---  @return An opaque updater
-function patch.update(fn, ...)
-	return setmetatable({fn = fn, n = select('#', ...), args = {...}}, update_mt)
+local function set(t) local s = {} for _, v in ipairs(t) do s[v] = true end return s end
+local reserved = set {
+	"replace",
+	"merge",
+	"insert_i",
+	"remove_i",
+	"explicit_replace"
+}
+
+--- Registers a custom updater. Each updater has a name, a
+--  metatable associated with it, and an update function. When patch.apply sees
+--  an object with the associated metatable, it will use apply the update()
+--  function instead of a builtin one.
+function patch.register_updater(name, mt, update)
+	if reserved[name] then
+		error("Updater " .. tostring(name) .. " is a builtin.")
+	end
+
+	mt_set[mt]     = name
+	updaters[name] = update
+	return true
 end
+
 return patch

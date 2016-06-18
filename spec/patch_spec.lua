@@ -45,14 +45,32 @@ describe("tables with patch.Nil", function()
 	}
 end)
 
-describe("tables with patch.update()", function()
-	local function add(a, b)
-		return a + b
+describe("tables with custom updaters", function()
+	local function add(orig, diff, mutate)
+		return orig + diff.num, orig
 	end
+	local mt = {}
+	patch.register_updater("add", mt, add)
 	test {
 		old  = {foo = 6900},
-		diff = {foo = patch.update(add, 42)},
+		diff = {foo = setmetatable({num=42}, mt)},
 		new  = {foo = 6942}
+	}
+end)
+
+describe("tables with table.insert_i()", function()
+	test {
+		old  = {1, 2, 3, 4},
+		diff = patch.insert_i(2, "foo"),
+		new  = {1, "foo", 2, 3, 4}
+	}
+end)
+
+describe("tables with patch.remove_i()", function()
+	test {
+		old  = {1, 2, 3, 4},
+		diff = patch.remove_i(2),
+		new  = {1, 3, 4}
 	}
 end)
 
