@@ -1,0 +1,304 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Patch.lua</title>
+    <link rel="stylesheet" href="ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>patch.lua</h1>
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Updaters">Updaters </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><strong>patch.patch</strong></li>
+</ul>
+<h2>Topics</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="topics/tour.md.html">patch.Tour</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>patch</code></h1>
+<p>
+
+</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#apply">patch.apply(input, patch)</a></td>
+	<td class="summary">Returns the patched version of the input value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#apply_inplace">patch.apply_inplace(input, patch)</a></td>
+	<td class="summary">Applies a patch to the input value directly.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#join">patch.join(...)</a></td>
+	<td class="summary"><strong>NYI</strong>: Merges multiple patches into a single patch.</td>
+	</tr>
+</table>
+<h2><a href="#Updaters">Updaters </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Nil">patch.Nil</a></td>
+	<td class="summary">The <code>nil</code> updater.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#replace">patch.replace(value)</a></td>
+	<td class="summary">Returns a <a href="index.html#replace">replace</a> updater.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#remove_i">patch.remove_i(pos)</a></td>
+	<td class="summary">Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-table.remove">table.remove</a> updater.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#insert_i">patch.insert_i(pos, value)</a></td>
+	<td class="summary">Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-table.insert">table.insert</a> updater.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#update">patch.update(fn, ...)</a></td>
+	<td class="summary">Returns a custom updater.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "apply"></a>
+    <strong>patch.apply(input, patch)</strong>
+    </dt>
+    <dd>
+    Returns the patched version of the input value.  Patches are a compound
+  datatype that can be made of normal Lua values, as well as "updaters" that
+  have specific patching strategies.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         the input value
+        </li>
+        <li><span class="parameter">patch</span>
+            <span class="types"><span class="type">Diff</span></span>
+         the patch to apply
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "apply_inplace"></a>
+    <strong>patch.apply_inplace(input, patch)</strong>
+    </dt>
+    <dd>
+    Applies a patch to the input value directly.  This should return the same
+  thing as patch.apply(), but the input value is left in an undefined state.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         the input value
+        </li>
+        <li><span class="parameter">patch</span>
+            <span class="types"><span class="type">Diff</span></span>
+         the patch to apply
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "join"></a>
+    <strong>patch.join(...)</strong>
+    </dt>
+    <dd>
+    <strong>NYI</strong>: Merges multiple patches into a single patch.   Patches that change the
+  same field in mutually exclusive ways are considered errors and return nil.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Updaters"></a>Updaters </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Nil"></a>
+    <strong>patch.Nil</strong>
+    </dt>
+    <dd>
+    The <code>nil</code> updater.  When you want to set a field to nil, use this instead of
+  nil directly.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "replace"></a>
+    <strong>patch.replace(value)</strong>
+    </dt>
+    <dd>
+    Returns a <a href="index.html#replace">replace</a> updater.  This is the equivalent of setting the field
+  directly to the given value. This can be used for anything, including <code>nil</code>
+  and other.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+         the new value
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "remove_i"></a>
+    <strong>patch.remove_i(pos)</strong>
+    </dt>
+    <dd>
+    Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-table.remove">table.remove</a> updater.  This is equivalent to calling
+  <code>table.remove(tbl, i)</code> where <code>tbl</code> is the input field.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pos</span>
+            <span class="types"><span class="type">number</span></span>
+         the index of the thing to remove
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "insert_i"></a>
+    <strong>patch.insert_i(pos, value)</strong>
+    </dt>
+    <dd>
+    Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-table.insert">table.insert</a> updater.  This is equivalent to calling
+  <code>table.insert(tbl, pos, value)</code> where <code>tbl</code> is the input field. Note that
+  the 2-arg variant is not supported: either explicitly name the index or use
+  a merge.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pos</span>
+            <span class="types"><span class="type">number</span></span>
+         the index to insert <code>v</code> at
+        </li>
+        <li><span class="parameter">value</span>
+         the value to insert
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "update"></a>
+    <strong>patch.update(fn, ...)</strong>
+    </dt>
+    <dd>
+    Returns a custom updater.  Takes a function that, given an old value,
+  returns an a new, updated value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fn</span>
+         the updater function
+        </li>
+        <li><span class="parameter">...</span>
+         extra arguments to pass to fn
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2016-06-18 09:16:12 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
