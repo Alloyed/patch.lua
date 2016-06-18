@@ -119,6 +119,7 @@ end
 --  have specific patching strategies.
 --  @param input the input value
 --  @tparam Diff patch the patch to apply
+--  @return output, undo
 function patch.apply(input, patch)
 	return visit(input, patch, false)
 end
@@ -127,6 +128,7 @@ end
 --  thing as patch.apply(), but the input value is left in an undefined state.
 --  @param input the input value
 --  @tparam Diff patch the patch to apply
+--  @return output, undo
 function patch.apply_inplace(input, patch)
 	return visit(input, patch, true)
 end
@@ -148,6 +150,7 @@ patch.Nil = setmetatable({}, {NIL = true})
 --  directly to the given value. This can be used for anything, including `nil`
 --  and other.
 --  @param value the new value
+--  @return An opaque updater
 function patch.replace(value)
 	if v == nil then return patch.Nil end
 	return setmetatable({v = v}, replace_mt)
@@ -156,6 +159,7 @@ end
 --- Returns a `table.remove` updater. This is equivalent to calling
 --  `table.remove(tbl, i)` where `tbl` is the input field.
 --  @tparam number pos the index of the thing to remove
+--  @return An opaque updater
 function patch.remove_i(pos)
 	assert(pos == nil or type(pos) == 'number')
 	return setmetatable({i = pos}, remove_i_mt)
@@ -167,6 +171,7 @@ end
 --  a merge.
 --  @tparam number pos the index to insert `v` at
 --  @param value the value to insert
+--  @return An opaque updater
 function patch.insert_i(pos, value)
 	assert(pos == nil or type(pos) == 'number')
 	return setmetatable({i = pos, v = v}, insert_i_mt)
@@ -176,6 +181,7 @@ end
 --  returns an a new, updated value.
 --  @param fn the updater function
 --  @param ... extra arguments to pass to fn
+--  @return An opaque updater
 function patch.update(fn, ...)
 	return setmetatable({fn = fn, n = select('#', ...), args = {...}}, update_mt)
 end

@@ -11,5 +11,9 @@ backtick_references=true
 no_space_before_args=true
 custom_display_name_handler=function(item, default_handler)
 	local p = default_handler(item)
-	return "patch."..p
+	if item.kind == "modules" or item.kind == "topics" then
+		return p
+	else
+		return "patch."..p
+	end
 end

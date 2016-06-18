@@ -1,9 +1,9 @@
 # patch.lua
 
 Patch.lua is a DSL for expressing complex changes to Lua tables as
-discrete patches.  Every time a patch is applied, an inverse undo patch
+discrete patches. Every time a patch is applied, an inverse undo patch
 is created, which means patch.lua can be used to easily add multi-level
-undo to a project.
+undo to an application.
 
 ## Installing
 
@@ -21,7 +21,12 @@ $ luarocks install https://raw.githubusercontent.com/Alloyed/patch.lua/master/pa
 
 ## Docs
 
-[API docs][api] and a [guided tutorial][tour] exist.
+[API docs][api] and a [guided tutorial][tour] exist. For more complex
+examples, you can check out the [unit tests][test].
+
+[api]: https://alloyed.github.io/patch.lua/
+[tour]: https://alloyed.github.io/patch.lua/topics/tour.md.html
+[test]: https://github.com/Alloyed/patch.lua/blob/master/spec/patch_spec.lua
 
 ## Testing
 
