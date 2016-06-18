@@ -115,26 +115,56 @@ end
 --- Returns the patched version of the input value. Patches are a compound
 --  datatype that can be made of normal Lua values, as well as "updaters" that
 --  have specific patching strategies.
---  @param input the input value
---  @tparam Diff patch the patch to apply
---  @return output, undo
+--  @param input the input value.
+--  @param patch the patch to apply.
+--  @return `output, undo`
 function patch.apply(input, patch)
 	return visit(input, patch, false)
 end
 
 --- Applies a patch to the input value directly. This should return the same
 --  thing as patch.apply(), but the input value is left in an undefined state.
---  @param input the input value
---  @tparam Diff patch the patch to apply
---  @return output, undo
+--  @param input the input value.
+--  @param patch the patch to apply.
+--  @return `output, undo`
 function patch.apply_inplace(input, patch)
 	return visit(input, patch, true)
 end
 
---- **NYI**: Merges multiple patches into a single patch.  Patches that change the
---  same field in mutually exclusive ways are considered errors and return nil.
+local empty = {}
+local function join_visit(a, b)
+	if a == nil then
+		return b
+	elseif b == nil then
+		return a
+	end
+
+	local ta = update_type(empty, a)
+	local tb = update_type(empty, b)
+	if ta ~= 'merge' or tb ~= 'merge' then
+		error("mutually exclusive updates")
+	end
+
+	-- This is inplace, but that's okay, we start from a fresh table anyways
+	local n = a
+	for k, v in pairs(b) do
+		n[k] = join_visit(n[k], v)
+	end
+
+	return n
+end
+
+--- Joins multiple patches into a single patch. Trying to join patches that
+--  change the same field in mutually exclusive ways will raise an `error`.
+--  @param ... the patches to join.
+--  @return The final patch. Note that `nil` is considered a no-op, so
+--  that's a valid return value.
 function patch.join(...)
-	error("NYI")
+	local n = {}
+	for i=1, select('#', ...) do
+		join_visit(n, (select(i, ...)))
+	end
+	return n
 end
 
 --- Updaters
@@ -147,8 +177,8 @@ patch.Nil = setmetatable({}, Nil_mt)
 --- Returns a `replace` updater. This is the equivalent of setting the field
 --  directly to the given value. This can be used for anything, including `nil`,
 --  whole tables, or other updaters.
---  @param value the new value
---  @return An opaque updater
+--  @param value the new value.
+--  @return An opaque updater.
 function patch.replace(value)
 	if value == nil then return patch.Nil end
 	return setmetatable({v = value}, replace_mt)
@@ -156,8 +186,8 @@ end
 
 --- Returns a `table.remove` updater. This is equivalent to calling
 --  `table.remove(tbl, i)` where `tbl` is the input field.
---  @tparam number pos the index of the thing to remove
---  @return An opaque updater
+--  @tparam int pos the index of the thing to remove.
+--  @return An opaque updater.
 function patch.remove_i(pos)
 	assert(pos == nil or type(pos) == 'number')
 	return setmetatable({i = pos}, remove_i_mt)
@@ -165,11 +195,10 @@ end
 
 --- Returns a `table.insert` updater. This is equivalent to calling
 --  `table.insert(tbl, pos, value)` where `tbl` is the input field. Note that
---  the 2-arg variant is not supported: either explicitly name the index or use
---  a merge.
---  @tparam number pos the index to insert `v` at
---  @param value the value to insert
---  @return An opaque updater
+--  the 2-arg variant is not supported: instead, use a table merge.
+--  @tparam int pos the index to insert at.
+--  @param value the value to insert.
+--  @return An opaque updater.
 function patch.insert_i(pos, value)
 	assert(pos == nil or type(pos) == 'number')
 	return setmetatable({i = pos, v = value}, insert_i_mt)
@@ -184,10 +213,33 @@ local reserved = set {
 	"explicit_replace"
 }
 
---- Registers a custom updater. Each updater has a name, a
---  metatable associated with it, and an update function. When patch.apply sees
---  an object with the associated metatable, it will use apply the update()
---  function instead of a builtin one.
+--- Registers a custom updater. Each updater has a name, a metatable associated
+--  with it, and an update function. When `patch.apply` sees an object with the
+--  associated metatable in a diff, it will use the given `update()` function
+--  to apply the patch.
+--
+--  Your `update()` function should have this signature:
+--
+--
+--    function(original, diff, mutate) return new, undo end
+--
+--
+--  where
+--
+--  * `original` is the original value in the table.
+--
+--  * `diff` is your updater object.
+--
+--  * `mutate` will be true if your updater is allowed to directly modify the
+--    `original` value.
+--
+--  * `new` is what your updater will replace `original` with.
+--
+--  * `undo` can be any patch that can turn `new` back into `original`.
+--
+--  @tparam string name the name of the updater.
+--  @tparam table mt the metatable each instance of the updater will share.
+--  @tparam function update the update function.
 function patch.register_updater(name, mt, update)
 	if reserved[name] then
 		error("Updater " .. tostring(name) .. " is a builtin.")

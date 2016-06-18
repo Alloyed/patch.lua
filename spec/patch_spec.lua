@@ -94,6 +94,50 @@ describe("tables with cycles", function()
 	}
 end)
 
+describe("patch.join()", function()
+	it("can join a patch with nothing", function()
+		assert.same({my="patch"}, patch.join(nil, {my="patch"}))
+		assert.same({my="patch"}, patch.join({my="patch"}, nil))
+		assert.same({my="patch"}, patch.join(nil, {my="patch"}, nil))
+	end)
+	local function call(f, ...)
+		local a = {n = select('#', ...), ...}
+		return function()
+			return f(unpack(a, 1, a.n))
+		end
+	end
+	it("will error for non-merges", function()
+		assert.has_errors(call(patch.join, 1, 2))
+		assert.has_errors(call(patch.join, {}, 2))
+		assert.has_errors(call(patch.join, patch.Nil, 2))
+		assert.has_errors(call(patch.join, patch.Nil, patch.Nil))
+		assert.has_errors(call(patch.join, nil, 1, 1))
+	end)
+	it("can join two merge-tables", function()
+		assert.same({a="b", c="d"}, patch.join({a="b"}, {c="d"}))
+		assert.same({a="b", c=patch.Nil}, patch.join({a="b"}, {c=patch.Nil}))
+		assert.same({a="b", c=patch.replace(2)}, patch.join({a="b"}, {c=patch.replace(2)}))
+	end)
+	it("will error if the non-merge happens inside another merge", function()
+		assert.has_errors(call(patch.join, {a="2"}, {a="3"}))
+		assert.has_errors(call(patch.join, {a="2"}, {a="2"})) -- TODO do we want this?
+		assert.has_errors(call(patch.join, {b=2}, {b=patch.Nil}))
+		assert.has_errors(call(patch.join, {{b=2}}, {{b=patch.Nil}}))
+	end)
+	it("can do nested joins", function()
+		assert.same({
+			{a = "b"},
+			{c = patch.Nil, d = "e"}
+		}, patch.join({{a="b"}}, {[2]={c=patch.Nil, d="e"}}))
+	end)
+	it("can join more than two patches at a time", function()
+		assert.same({
+			{a = "b", d = "e"},
+			{c = patch.Nil}
+		}, patch.join({{a="b"}}, {[2]={c=patch.Nil}},{{d="e"}}))
+	end)
+end)
+
 function test(input)
 	local util = require 'luassert.util'
 	local _old, _new = util.deepcopy(input.old), util.deepcopy(input.new)
