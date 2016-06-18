@@ -1,10 +1,36 @@
 # patch.lua
 
+Patch.lua is a DSL for expressing complex changes to Lua tables as
+discrete patches.  Every time a patch is applied, an inverse undo patch
+is created, which means patch.lua can be used to easily add multi-level
+undo to a project.
+
 ## Installing
 
-TODO
+Patch.lua can be installed using luarocks:
+
+```
+$ luarocks install patch
+```
+
+To get the most recent source checkout:
+
+```
+$ luarocks install https://raw.githubusercontent.com/Alloyed/patch.lua/master/patch-scm-1.rockspec
+```
 
 ## Docs
+
+[API docs][api] and a [guided tutorial][tour] exist.
+
+## Testing
+
+Patch.lua uses busted for testing:
+
+```
+# luarocks install busted
+$ busted
+```
 
 ## LICENSE
 
