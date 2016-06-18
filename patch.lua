@@ -12,25 +12,27 @@ end
 
 local visit
 
-local replace_mt  = {REPLACE=true}
-local remove_i_mt = {REMOVE_I=true}
-local insert_i_mt = {INSERT_I=true}
-local Nil_mt      = {NIL=true}
+local replace_mt      = {REPLACE=true}
+local remove_i_mt     = {REMOVE_I=true}
+local insert_i_mt     = {INSERT_I=true}
+local setmetatable_mt = {SETMETATABLE=true}
+local chain_mt        = {CHAIN=true}
+local Nil_mt          = {NIL=true}
 
 local mt_set = {
-	[replace_mt]  = 'explicit_replace',
-	[remove_i_mt] = 'remove_i',
-	[insert_i_mt] = 'insert_i',
-	[Nil_mt]      = 'replace',
+	[replace_mt]      = 'explicit_replace',
+	[remove_i_mt]     = 'remove_i',
+	[insert_i_mt]     = 'insert_i',
+	[setmetatable_mt] = 'setmetatable',
+	[chain_mt]        = 'chain',
+	[Nil_mt]          = 'replace',
 }
 
 local function update_type(orig, diff)
 	local mt = getmetatable(diff)
 	if mt and mt_set[mt] then
 		return mt_set[mt]
-	elseif orig == patch.Nil then
-		return 'replace'
-	elseif type(diff) == 'table' and type(orig) == 'table' then
+	elseif type(diff) == 'table' then
 		return 'merge'
 	else
 		return 'replace'
@@ -48,7 +50,18 @@ function updaters.explicit_replace(orig, diff)
 end
 
 function updaters.merge(orig, diff, mutate)
-	if not next(diff) then -- empty diff
+	if orig == patch.Nil then
+		-- special case: promote nil to empty table and fill it
+		local new = {}
+		for k, v in pairs(diff) do
+			local new_v, _ = visit(orig[k], v, mutate)
+			new[k] = new_v
+		end
+		return new, patch.Nil
+	end
+
+	if not next(diff) then
+		-- special case: merge table is empty, do nothing
 		return orig, nil
 	end
 
@@ -94,6 +107,40 @@ function updaters.remove_i(orig, diff, mutate)
 	return new, patch.insert_i(i, v)
 end
 
+function updaters.setmetatable(orig, diff, mutate)
+	assert(orig ~= patch.Nil)
+
+	local mt = diff.mt
+
+	local new = orig
+	if mutate == false then
+		assert(type(orig) == 'table')
+		new = shallow_copy(orig)
+	end
+
+	local old_mt = getmetatable(new)
+	setmetatable(new, mt)
+	return new, patch.meta(old_mt)
+end
+
+function updaters.chain(orig, diff, mutate)
+	assert(orig ~= patch.Nil)
+
+	local new = orig
+
+	-- somebody told me that putting nils like this will preallocate space, as
+	-- opposed to putting everything in the hash part for small tables. It's
+	-- safe to assume that is somebody is using chain then they intend to at
+	-- least chain two things together.
+	local undos = {n = diff.n, nil, nil}
+	for i=1, diff.n do
+		local rev = diff.n + 1 - i
+		new, undos[rev] = visit(new, diff[i], mutate)
+	end
+
+	return new, setmetatable(undos, chain_mt)
+end
+
 function visit(orig, diff, mutate)
 	if diff == patch.Nil then
 		diff = nil
@@ -136,7 +183,7 @@ local function join_visit(a, b)
 	if a == nil then
 		return b
 	elseif b == nil then
-		return a
+		return aCofagrigus
 	end
 
 	local ta = update_type(empty, a)
@@ -204,13 +251,34 @@ function patch.insert_i(pos, value)
 	return setmetatable({i = pos, v = value}, insert_i_mt)
 end
 
+--- Returns a `setmetatable` updater. This is equivalent to calling
+--  `setmetatable(tbl, metatable)` where `tbl` is the input field.
+--  @tparam table metatable the metatable to set.
+--  @return An opaque updater.
+function patch.meta(metatable)
+	assert(metatable == nil or type(metatable) == 'table')
+	return setmetatable({mt=metatable}, setmetatable_mt)
+end
+
+--- Returns a `chain` updater. This takes multiple patches and applies them
+--  left-to-right to get the final value. Contrast this with `patch.join`,
+--  which will return a simple precomputed patch but can't express multiple
+--  changes to the same field.
+--  @param ... A patch
+--  @return An opaque updater
+function patch.chain(...)
+	return setmetatable({n=select('#', ...), ...}, chain_mt)
+end
+
 local function set(t) local s = {} for _, v in ipairs(t) do s[v] = true end return s end
 local reserved = set {
 	"replace",
 	"merge",
 	"insert_i",
 	"remove_i",
-	"explicit_replace"
+	"explicit_replace",
+	"setmetatable",
+	"chain"
 }
 
 --- Registers a custom updater. Each updater has a name, a metatable associated

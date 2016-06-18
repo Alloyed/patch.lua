@@ -19,8 +19,8 @@ apply it will give you the original value.
 	value, _ = patch.apply(value, undo2) --    "magic" -> 2
 	value, _ = patch.apply(value, undo)  --          2 -> 1
 Patch supports more complex operations than simple replacement, though.
-When the input and the patch are both tables, then each value in the
-patch table is recursively applied to the input table, like so:
+When the patch is a table, then each value in the patch table is
+recursively applied to the input, like so:
 	t = { a = 1, 'a', 'b', 'c'}
 	t2, _ = patch.apply(t,  {[2] = 2})           -- t2[2]    = 2
 	t3, _ = patch.apply(t2, {a = {age = "old"}}) -- t3.a     = {age = "old"}

@@ -1,4 +1,5 @@
 local patch = require 'patch'
+local test
 
 describe("flat tables", function()
 	test {
@@ -91,6 +92,55 @@ describe("tables with cycles", function()
 		old  = {foo = t, bar = t},
 		diff = {foo = {foo = "c" }},
 		new  = {foo = {foo = "c", chthulu = 'bar', woah = t}, bar = t}
+	}
+end)
+
+describe("tables with patch.meta()", function()
+	local o_mt = {"old"}
+	local n_mt = {"new"}
+	test {
+		old  = setmetatable({}, o_mt),
+		diff = patch.meta(n_mt),
+		new  = setmetatable({}, n_mt)
+	}
+end)
+
+describe("tables with patch.chain()", function()
+	local o_mt = {"old"}
+	local n_mt = {"new"}
+	test {
+		old  = setmetatable({}, o_mt),
+		diff = patch.chain({a=1}, patch.meta(n_mt)),
+		new  = setmetatable({a=1}, n_mt)
+	}
+
+	test {
+		old  = {a=1},
+		diff = patch.chain({a=2}, {a=3}),
+		new  = {a=3}
+	}
+end)
+
+describe("tables that promote nil -> {}m", function()
+	test {
+		old  = {foo = nil},
+		diff = {foo = {a = "table"}},
+		new  = {foo = {a = "table"}}
+	}
+	test {
+		old  = {foo = nil},
+		diff = {foo = {a = patch.replace("replaced")}},
+		new  = {foo = {a = "replaced"}}
+	}
+	test {
+		old  = {bar = nil},
+		diff = {bar = {}},
+		new  = {bar = {}}
+	}
+	test {
+		old  = {foo = nil},
+		diff = {foo = {a = patch.Nil}},
+		new  = {foo = {}}
 	}
 end)
 
