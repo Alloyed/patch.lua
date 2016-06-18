@@ -152,8 +152,8 @@ patch.Nil = setmetatable({}, {NIL = true})
 --  @param value the new value
 --  @return An opaque updater
 function patch.replace(value)
-	if v == nil then return patch.Nil end
-	return setmetatable({v = v}, replace_mt)
+	if value == nil then return patch.Nil end
+	return setmetatable({v = value}, replace_mt)
 end
 
 --- Returns a `table.remove` updater. This is equivalent to calling
