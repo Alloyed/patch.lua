@@ -7,3 +7,8 @@ dir="doc"
 sort_modules=true
 use_markdown_titles=true
 backtick_references=true
+no_space_before_args=true
+custom_display_name_handler=function(item, default_handler)
+	local p = default_handler(item)
+	return "patch."..p
+end

@@ -114,36 +114,62 @@ function visit(orig, diff, mutate)
 	return updaters[t](orig, diff, mutate)
 end
 
---- The "nil" updater. When you want to set a field to nil, use this instead of
+--- Returns the patched version of the input value. Patches are a compound
+--  datatype that can be made of normal Lua values, as well as "updaters" that
+--  have specific patching strategies.
+--  @param input the input value
+--  @tparam Diff patch the patch to apply
+function patch.apply(input, patch)
+	return visit(input, patch, false)
+end
+
+--- Applies a patch to the input value directly. This should return the same
+--  thing as patch.apply(), but the input value is left in an undefined state.
+--  @param input the input value
+--  @tparam Diff patch the patch to apply
+function patch.apply_inplace(input, patch)
+	return visit(input, patch, true)
+end
+
+--- **NYI**: Merges multiple patches into a single patch.  Patches that change the
+--  same field in mutually exclusive ways are considered errors and return nil.
+function patch.join(...)
+	error("NYI")
+end
+
+--- Updaters
+--  @section updaters
+
+--- The `nil` updater. When you want to set a field to nil, use this instead of
 --  nil directly.
 patch.Nil = setmetatable({}, {NIL = true})
 
---- Returns a "replace" updater. This forces patch() to replace the field with
---  the given value. This can be used for anything, including `nil` and other.
---  updaters.
---  @param v the new value
-function patch.replace(v)
+--- Returns a `replace` updater. This is the equivalent of setting the field
+--  directly to the given value. This can be used for anything, including `nil`
+--  and other.
+--  @param value the new value
+function patch.replace(value)
 	if v == nil then return patch.Nil end
 	return setmetatable({v = v}, replace_mt)
 end
 
---- Returns an "remove_i" updater. This is equivalent to calling
+--- Returns a `table.remove` updater. This is equivalent to calling
 --  `table.remove(tbl, i)` where `tbl` is the input field.
---  @param i the index of the thing to remove
-function patch.remove_i(i)
-	assert(i == nil or type(i) == 'number')
-	return setmetatable({i = i}, remove_i_mt)
+--  @tparam number pos the index of the thing to remove
+function patch.remove_i(pos)
+	assert(pos == nil or type(pos) == 'number')
+	return setmetatable({i = pos}, remove_i_mt)
 end
 
---- Returns an "insert_i" updater. This is equivalent to calling
---  `table.insert(tbl, i, v)` where `tbl` is the input field. Note that the
---  2-arg variant is not supported: either explicitly name the index or use a
---  merge.
---  @param i the index to insert `v` at
---  @param v the value to insert
-function patch.insert_i(i, v)
-	assert(i == nil or type(i) == 'number')
-	return setmetatable({i = i, v = v}, insert_i_mt)
+--- Returns a `table.insert` updater. This is equivalent to calling
+--  `table.insert(tbl, pos, value)` where `tbl` is the input field. Note that
+--  the 2-arg variant is not supported: either explicitly name the index or use
+--  a merge.
+--  @tparam number pos the index to insert `v` at
+--  @param value the value to insert
+function patch.insert_i(pos, value)
+	assert(pos == nil or type(pos) == 'number')
+	return setmetatable({i = pos, v = v}, insert_i_mt)
 end
 
 --- Returns a custom updater. Takes a function that, given an old value,
@@ -153,29 +179,4 @@ end
 function patch.update(fn, ...)
 	return setmetatable({fn = fn, n = select('#', ...), args = {...}}, update_mt)
 end
-
---- NYI: Takes multiple patch objects and returns a single patch that has the
---  same effect as applying all of them. Patches that change the same field in
---  mutually exclusive ways are considered errors and return nil.
-function patch.join(...)
-	error("NYI")
-end
-
---- Returns the patched version of the input value. Patches are a compound
---  datatype that can be made of normal Lua values, as well as "updaters" that
---  have specific patching strategies.
---  @tparam any input the input value
---  @tparam Diff patch the patch to apply
-function patch.apply(input, patch)
-	return visit(input, patch, false)
-end
-
---- Applies a patch to the input value directly. This should return the same
---  thing as patch.apply(), but the input value is left in an undefined state.
---  @tparam any input the input value
---  @tparam Diff patch the patch to apply
-function patch.apply_inplace(input, patch)
-	return visit(input, patch, true)
-end
-
 return patch
