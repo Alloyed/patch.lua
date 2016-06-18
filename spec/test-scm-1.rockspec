@@ -12,6 +12,7 @@ dependencies = {
    "luacheck",
    "luacov",
    "luacov-coveralls",
+   "ldoc"
 }
 build = {
    type = "none"

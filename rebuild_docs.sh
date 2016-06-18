@@ -4,7 +4,7 @@ set -o errexit -o nounset
 
 rev=$(git rev-parse --short HEAD)
 
-ldoc -d $CIRCLE_ARTIFACTS/docs .
+$HOME/.luarocks/bin/ldoc -d $CIRCLE_ARTIFACTS/docs .
 
 cp circle.yml $CIRCLE_ARTIFACTS/docs
 
