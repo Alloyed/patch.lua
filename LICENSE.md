@@ -1,12 +1,5 @@
-# patch.lua
-
-## Installing
-
-TODO
-
-## Docs
-
-## LICENSE
+LICENSE
+=======
 
 Copyright (c) 2016, Kyle McLamb <alloyed@tfwno.gf> under the MIT License
 

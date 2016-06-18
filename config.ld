@@ -3,6 +3,7 @@ title="Patch.lua"
 description="A library for diffing/patching lua tables"
 format="markdown"
 file={"patch.lua"}
+readme="tour.md"
 dir="doc"
 sort_modules=true
 use_markdown_titles=true
