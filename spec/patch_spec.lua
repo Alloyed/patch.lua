@@ -1,40 +1,5 @@
 local patch = require 'patch'
 
-local function test(input)
-	local util = require 'luassert.util'
-	local _old, _new = util.deepcopy(input.old), util.deepcopy(input.new)
-	local patched, undo = patch.apply(input.old, input.diff)
-	local unpatched = patch.apply(input.new, undo)
-	it("can be applied", function()
-		assert.not_equal(_new, input.new)
-		assert.same(_new, input.new)
-		assert.not_equal(input.new, patched)
-		assert.same(input.new, patched)
-	end)
-	it("can be undone", function()
-		assert.not_equal(_old, input.old)
-		assert.same(_old, input.old)
-		assert.not_equal(input.old, unpatched)
-		assert.same(input.old, unpatched)
-	end)
-
-	local T, T_undo
-	it("can be applied inplace", function()
-		T, T_undo = patch.apply_inplace(unpatched, input.diff)
-		assert.not_equal(_new, input.new)
-		assert.same(_new, input.new)
-		assert.equal(unpatched, T)
-		assert.same(input.new, T)
-	end)
-	it("can be undone inplace", function()
-		T, T_undo = patch.apply_inplace(T, T_undo)
-		assert.not_equal(_old, input.old)
-		assert.same(_old, input.old)
-		assert.equal(unpatched, T)
-		assert.same(input.old, T)
-	end)
-end
-
 describe("flat tables", function()
 	test {
 		old  = {foo = "bar"},
@@ -110,3 +75,38 @@ describe("tables with cycles", function()
 		new  = {foo = {foo = "c", chthulu = 'bar', woah = t}, bar = t}
 	}
 end)
+
+function test(input)
+	local util = require 'luassert.util'
+	local _old, _new = util.deepcopy(input.old), util.deepcopy(input.new)
+	local patched, undo = patch.apply(input.old, input.diff)
+	local unpatched = patch.apply(input.new, undo)
+	it("can be applied", function()
+		assert.not_equal(_new, input.new)
+		assert.same(_new, input.new)
+		assert.not_equal(input.new, patched)
+		assert.same(input.new, patched)
+	end)
+	it("can be undone", function()
+		assert.not_equal(_old, input.old)
+		assert.same(_old, input.old)
+		assert.not_equal(input.old, unpatched)
+		assert.same(input.old, unpatched)
+	end)
+
+	local T, T_undo
+	it("can be applied inplace", function()
+		T, T_undo = patch.apply_inplace(unpatched, input.diff)
+		assert.not_equal(_new, input.new)
+		assert.same(_new, input.new)
+		assert.equal(unpatched, T)
+		assert.same(input.new, T)
+	end)
+	it("can be undone inplace", function()
+		T, T_undo = patch.apply_inplace(T, T_undo)
+		assert.not_equal(_old, input.old)
+		assert.same(_old, input.old)
+		assert.equal(unpatched, T)
+		assert.same(input.old, T)
+	end)
+end
