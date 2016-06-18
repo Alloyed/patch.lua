@@ -68,7 +68,7 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#join">patch.join(...)</a></td>
-	<td class="summary"><strong>NYI</strong>: Merges multiple patches into a single patch.</td>
+	<td class="summary">Joins multiple patches into a single patch.</td>
 	</tr>
 </table>
 <h2><a href="#Updaters">Updaters </a></h2>
@@ -115,18 +115,17 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">input</span>
-         the input value
+         the input value.
         </li>
         <li><span class="parameter">patch</span>
-            <span class="types"><span class="type">Diff</span></span>
-         the patch to apply
+         the patch to apply.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        output, undo
+        <code>output, undo</code>
     </ol>
 
 
@@ -145,18 +144,17 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">input</span>
-         the input value
+         the input value.
         </li>
         <li><span class="parameter">patch</span>
-            <span class="types"><span class="type">Diff</span></span>
-         the patch to apply
+         the patch to apply.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        output, undo
+        <code>output, undo</code>
     </ol>
 
 
@@ -168,19 +166,23 @@
     <strong>patch.join(...)</strong>
     </dt>
     <dd>
-    <strong>NYI</strong>: Merges multiple patches into a single patch.   Patches that change the
-  same field in mutually exclusive ways are considered errors and return nil.
+    Joins multiple patches into a single patch.  Trying to join patches that
+  change the same field in mutually exclusive ways will raise an <code>error</code>.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">...</span>
-
-
-
+         the patches to join.
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
+
+        The final patch. Note that <code>nil</code> is considered a no-op, so
+  that's a valid return value.
+    </ol>
 
 
 
@@ -218,14 +220,14 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">value</span>
-         the new value
+         the new value.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        An opaque updater
+        An opaque updater.
     </ol>
 
 
@@ -244,15 +246,15 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">pos</span>
-            <span class="types"><span class="type">number</span></span>
-         the index of the thing to remove
+            <span class="types"><span class="type">int</span></span>
+         the index of the thing to remove.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        An opaque updater
+        An opaque updater.
     </ol>
 
 
@@ -266,25 +268,24 @@
     <dd>
     Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-table.insert">table.insert</a> updater.  This is equivalent to calling
   <code>table.insert(tbl, pos, value)</code> where <code>tbl</code> is the input field. Note that
-  the 2-arg variant is not supported: either explicitly name the index or use
-  a merge.
+  the 2-arg variant is not supported: instead, use a table merge.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">pos</span>
-            <span class="types"><span class="type">number</span></span>
-         the index to insert <code>v</code> at
+            <span class="types"><span class="type">int</span></span>
+         the index to insert at.
         </li>
         <li><span class="parameter">value</span>
-         the value to insert
+         the value to insert.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        An opaque updater
+        An opaque updater.
     </ol>
 
 
@@ -296,28 +297,46 @@
     <strong>patch.register_updater(name, mt, update)</strong>
     </dt>
     <dd>
-    Registers a custom updater.  Each updater has a name, a
-  metatable associated with it, and an update function. When patch.apply sees
-  an object with the associated metatable, it will use apply the update()
-  function instead of a builtin one.
+
+<p>Registers a custom updater.  Each updater has a name, a metatable associated
+  with it, and an update function. When <a href="index.html#apply">patch.apply</a> sees an object with the
+  associated metatable in a diff, it will use the given <code>update()</code> function
+  to apply the patch.</p>
+
+<p>  Your <code>update()</code> function should have this signature:</p>
+
+
+<pre><code>function(original, diff, mutate) return new, undo end
+</code></pre>
+
+
+<p>  where</p>
+
+<ul>
+    <li><p><code>original</code> is the original value in the table.</p></li>
+    <li><p><code>diff</code> is your updater object.</p></li>
+    <li><p><code>mutate</code> will be true if your updater is allowed to directly modify the
+    <code>original</code> value.</p></li>
+    <li><p><code>new</code> is what your updater will replace <code>original</code> with.</p></li>
+    <li><p><code>undo</code> can be any patch that can turn <code>new</code> back into <code>original</code>.</p></li>
+</ul>
+
+
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">name</span>
-
-
-
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the name of the updater.
         </li>
         <li><span class="parameter">mt</span>
-
-
-
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         the metatable each instance of the updater will share.
         </li>
         <li><span class="parameter">update</span>
-
-
-
+            <span class="types"><span class="type">function</span></span>
+         the update function.
         </li>
     </ul>
 
@@ -333,7 +352,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
-<i style="float:right;">Last updated 2016-06-18 17:08:06 </i>
+<i style="float:right;">Last updated 2016-06-18 19:46:03 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
