@@ -19,6 +19,13 @@ To get the most recent source checkout:
 $ luarocks install https://raw.githubusercontent.com/Alloyed/patch.lua/master/patch-scm-1.rockspec
 ```
 
+Since it's a single file with no dependencies, you can also skip the
+package manager and download it directly if you prefer:
+
+```
+$ wget https://raw.githubusercontent.com/Alloyed/patch.lua/master/patch.lua
+```
+
 ## Docs
 
 [API docs][api] and a [guided tutorial][tour] exist. For more complex
