@@ -179,23 +179,24 @@ function patch.apply_inplace(input, patch)
 end
 
 local empty = {}
-local function join_visit(a, b)
+local function join_visit(a, b, path)
 	if a == nil then
 		return b
 	elseif b == nil then
-		return aCofagrigus
+		return a
 	end
 
 	local ta = update_type(empty, a)
 	local tb = update_type(empty, b)
 	if ta ~= 'merge' or tb ~= 'merge' then
-		error("mutually exclusive updates")
+		error((path or "toplevel") .. ": mutually exclusive updates")
 	end
 
 	-- This is inplace, but that's okay, we start from a fresh table anyways
 	local n = a
 	for k, v in pairs(b) do
-		n[k] = join_visit(n[k], v)
+		local p = path and (path.."."..tostring(k)) or tostring(k)
+		n[k] = join_visit(n[k], v, p)
 	end
 
 	return n
