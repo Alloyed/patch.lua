@@ -65,6 +65,12 @@ describe("tables with table.insert_i()", function()
 		diff = patch.insert_i(2, "foo"),
 		new  = {1, "foo", 2, 3, 4}
 	}
+
+	test {
+		old  = {1, 2, 3, 4},
+		diff = patch.insert_i("foo"),
+		new  = {1, 2, 3, 4, "foo"}
+	}
 end)
 
 describe("tables with patch.remove_i()", function()
@@ -72,6 +78,11 @@ describe("tables with patch.remove_i()", function()
 		old  = {1, 2, 3, 4},
 		diff = patch.remove_i(2),
 		new  = {1, 3, 4}
+	}
+	test {
+		old  = {1, 2, 3, 4},
+		diff = patch.remove_i(),
+		new  = {1, 2, 3}
 	}
 end)
 

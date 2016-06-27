@@ -89,7 +89,11 @@ function updaters.insert_i(orig, diff, mutate)
 	if mutate == false then
 		new = shallow_copy(orig)
 	end
-	table.insert(new, i, v)
+	if i == nil then
+		table.insert(new, v)
+	else
+		table.insert(new, i, v)
+	end
 	return new, patch.remove_i(i)
 end
 
@@ -233,7 +237,8 @@ function patch.replace(value)
 end
 
 --- Returns a `table.remove` updater. This is equivalent to calling
---  `table.remove(tbl, i)` where `tbl` is the input field.
+--  `table.remove(tbl, pos)` where `tbl` is the input field. If `pos` is
+--  omitted or is nil, the last element is removed.
 --  @tparam int pos the index of the thing to remove.
 --  @return An opaque updater.
 function patch.remove_i(pos)
@@ -242,13 +247,20 @@ function patch.remove_i(pos)
 end
 
 --- Returns a `table.insert` updater. This is equivalent to calling
---  `table.insert(tbl, pos, value)` where `tbl` is the input field. Note that
---  the 2-arg variant is not supported: instead, use a table merge.
+--  `table.insert(tbl, pos, value)` where `tbl` is the input field.
 --  @tparam int pos the index to insert at.
 --  @param value the value to insert.
 --  @return An opaque updater.
-function patch.insert_i(pos, value)
+function patch.insert_i(...)
+	local pos, value
+	if select('#', ...) == 1 then -- append variant.
+		pos = nil
+		value = ...
+	else
+		pos, value = ...
+	end
 	assert(pos == nil or type(pos) == 'number')
+	assert(value ~= nil)
 	return setmetatable({i = pos, v = value}, insert_i_mt)
 end
 
