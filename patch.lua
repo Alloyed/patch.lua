@@ -146,6 +146,10 @@ function updaters.chain(orig, diff, mutate)
 end
 
 function visit(orig, diff, mutate)
+	if diff == nil then -- no-op
+		return orig, nil
+	end
+
 	if diff == patch.Nil then
 		diff = nil
 	end
