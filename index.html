@@ -30,16 +30,16 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
-<li><a href="#Updaters">Updaters </a></li>
+<li><a href="#Updaters">Updaters</a></li>
 </ul>
 
 
 <h2>Modules</h2>
-<ul class="$(kind=='Topics' and '' or 'nowrap'">
+<ul class="nowrap">
   <li><strong>patch</strong></li>
 </ul>
 <h2>Topics</h2>
-<ul class="$(kind=='Topics' and '' or 'nowrap'">
+<ul class="">
   <li><a href="topics/tour.md.html">Tour</a></li>
 </ul>
 
@@ -71,7 +71,7 @@
 	<td class="summary">Joins multiple patches into a single patch.</td>
 	</tr>
 </table>
-<h2><a href="#Updaters">Updaters </a></h2>
+<h2><a href="#Updaters">Updaters</a></h2>
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#Nil">patch.Nil</a></td>
@@ -83,15 +83,15 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#remove_i">patch.remove_i(pos)</a></td>
-	<td class="summary">Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-table.remove">table.remove</a> updater.</td>
+	<td class="summary">Returns a <a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.remove">table.remove</a> updater.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#insert_i">patch.insert_i(pos, value)</a></td>
-	<td class="summary">Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-table.insert">table.insert</a> updater.</td>
+	<td class="summary">Returns a <a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.insert">table.insert</a> updater.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#meta">patch.meta(metatable)</a></td>
-	<td class="summary">Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-setmetatable">setmetatable</a> updater.</td>
+	<td class="summary">Returns a <a href="https://www.lua.org/manual/5.1/manual.html#pdf-setmetatable">setmetatable</a> updater.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#chain">patch.chain(...)</a></td>
@@ -175,7 +175,7 @@
     </dt>
     <dd>
     Joins multiple patches into a single patch.  Trying to join patches that
-  change the same field in mutually exclusive ways will raise an <code>error</code>.
+  change the same field in mutually exclusive ways will raise an <a href="https://www.lua.org/manual/5.1/manual.html#pdf-error">error</a>.
 
 
     <h3>Parameters:</h3>
@@ -197,7 +197,7 @@
 
 </dd>
 </dl>
-    <h2 class="section-header "><a name="Updaters"></a>Updaters </h2>
+    <h2 class="section-header "><a name="Updaters"></a>Updaters</h2>
 
     <dl class="function">
     <dt>
@@ -247,7 +247,7 @@
     <strong>patch.remove_i(pos)</strong>
     </dt>
     <dd>
-    Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-table.remove">table.remove</a> updater.  This is equivalent to calling
+    Returns a <a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.remove">table.remove</a> updater.  This is equivalent to calling
   <code>table.remove(tbl, pos)</code> where <code>tbl</code> is the input field. If <code>pos</code> is
   omitted or is nil, the last element is removed.
 
@@ -275,7 +275,7 @@
     <strong>patch.insert_i(pos, value)</strong>
     </dt>
     <dd>
-    Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-table.insert">table.insert</a> updater.  This is equivalent to calling
+    Returns a <a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.insert">table.insert</a> updater.  This is equivalent to calling
   <code>table.insert(tbl, pos, value)</code> where <code>tbl</code> is the input field.
 
 
@@ -305,14 +305,14 @@
     <strong>patch.meta(metatable)</strong>
     </dt>
     <dd>
-    Returns a <a href="http://www.lua.org/manual/5.1/manual.html#pdf-setmetatable">setmetatable</a> updater.  This is equivalent to calling
+    Returns a <a href="https://www.lua.org/manual/5.1/manual.html#pdf-setmetatable">setmetatable</a> updater.  This is equivalent to calling
   <code>setmetatable(tbl, metatable)</code> where <code>tbl</code> is the input field.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">metatable</span>
-            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
          the metatable to set.
         </li>
     </ul>
@@ -390,11 +390,11 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">name</span>
-            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
          the name of the updater.
         </li>
         <li><span class="parameter">mt</span>
-            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
          the metatable each instance of the updater will share.
         </li>
         <li><span class="parameter">update</span>
@@ -414,8 +414,8 @@
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
-<i style="float:right;">Last updated 2016-06-27 19:48:10 </i>
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.5</a></i>
+<i style="float:right;">Last updated 2016-08-28 07:19:40 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
