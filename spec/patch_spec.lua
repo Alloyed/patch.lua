@@ -130,9 +130,27 @@ describe("tables with patch.chain()", function()
 		diff = patch.chain({a=2}, {a=3}),
 		new  = {a=3}
 	}
+
+	test {
+		old  = {a=1},
+		diff = patch.chain({a=2, b = 1}, {a=3}),
+		new  = {a=3, b = 1}
+	}
+
+	test {
+		old  = {a=1},
+		diff = patch.chain(nil, {a=3}),
+		new  = {a=3}
+	}
+
+	test {
+		old  = {a=1},
+		diff = patch.chain({a=1, c = 2}, patch.chain({a=2, b = 1}, {a=3})),
+		new  = {a=3, b = 1, c = 2}
+	}
 end)
 
-describe("tables that promote nil -> {}m", function()
+describe("tables that promote nil -> {}", function()
 	test {
 		old  = {foo = nil},
 		diff = {foo = {a = "table"}},
@@ -232,4 +250,14 @@ function test(input)
 		assert.equal(unpatched, T)
 		assert.same(input.old, T)
 	end)
+
+	if input.is_diff == nil then
+		local diff = patch.diff(input.old, input.new)
+		test {
+			old     = input.old,
+			new     = input.new,
+			diff    = diff,
+			is_diff = true
+		}
+	end
 end

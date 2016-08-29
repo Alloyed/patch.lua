@@ -28,7 +28,7 @@ local mt_set = {
 	[Nil_mt]          = 'replace',
 }
 
-local function update_type(orig, diff)
+local function update_type(diff)
 	local mt = getmetatable(diff)
 	if mt and mt_set[mt] then
 		return mt_set[mt]
@@ -102,6 +102,10 @@ function updaters.remove_i(orig, diff, mutate)
 	assert(type(orig) == 'table')
 
 	local i = diff.i
+	if i == nil then
+		i = #orig
+	end
+	assert(orig[i] ~= nil, #orig .. " < " .. i)
 
 	local new = orig
 	if mutate == false then
@@ -131,6 +135,11 @@ function updaters.chain(orig, diff, mutate)
 	assert(orig ~= patch.Nil)
 
 	local new = orig
+	if diff.n == 0 then
+		return new, {}
+	elseif diff.n == 1 then
+		return visit(new, diff[1], mutate)
+	end
 
 	-- somebody told me that putting nils like this will preallocate space, as
 	-- opposed to putting everything in the hash part for small tables. It's
@@ -162,7 +171,7 @@ function visit(orig, diff, mutate)
 		orig = patch.Nil
 	end
 
-	local t = update_type(orig, diff)
+	local t = update_type(diff)
 
 	return updaters[t](orig, diff, mutate)
 end
@@ -186,18 +195,25 @@ function patch.apply_inplace(input, patch)
 	return visit(input, patch, true)
 end
 
-local empty = {}
+local function is_empty(a)
+	return getmetatable(a) == nil and next(a) == nil
+end
+
 local function join_visit(a, b, path)
 	if a == nil then
 		return b
-	elseif b == nil then
+	elseif b == nil or is_empty(b) then
 		return a
 	end
 
-	local ta = update_type(empty, a)
-	local tb = update_type(empty, b)
+	local ta = update_type(a)
+	local tb = update_type(b)
 	if ta ~= 'merge' or tb ~= 'merge' then
-		error((path or "toplevel") .. ": mutually exclusive updates")
+		error(([[
+%s: mutually exclusive updates:
+(%s) %s
+-- vs --
+(%s) %s]]):format(path or "toplevel", ta, require'inspect'(a), tb, require'inspect'(b)))
 	end
 
 	-- This is inplace, but that's okay, we start from a fresh table anyways
@@ -221,6 +237,50 @@ function patch.join(...)
 		join_visit(n, (select(i, ...)))
 	end
 	return n
+end
+
+local function is_simple_table(t)
+	return type(t) == 'table' and getmetatable(t) == nil
+end
+
+local function diff_visit(a, b, seen)
+	assert(seen[a] == nil)
+	assert(seen[b] == nil)
+
+	seen[a] = true
+	seen[b] = true
+
+	local diff = {}
+
+	for k, av in pairs(a) do
+		if b[k] == nil then
+			diff[k] = patch.Nil
+		elseif b[k] ~= av then
+			local bv = b[k]
+			if is_simple_table(av) and is_simple_table(bv) then
+				diff[k] = diff_visit(av, bv, seen)
+			else
+				diff[k] = patch.replace(bv)
+			end
+		end
+	end
+
+	for k, v in pairs(b) do
+		if a[k] == nil then
+			diff[k] = patch.replace(v)
+		end
+	end
+
+	return diff
+end
+
+--- Given two tables `a` and `b`, returns a patch `p` such that
+--`patch.apply(a, p) == b`
+function patch.diff(a, b)
+	--- FIXME: apply allows for single-value diffs, so should we.
+	assert(type(a) == 'table')
+	assert(type(b) == 'table')
+	return diff_visit(a, b, {})
 end
 
 --- Updaters
@@ -277,14 +337,21 @@ function patch.meta(metatable)
 	return setmetatable({mt=metatable}, setmetatable_mt)
 end
 
---- Returns a `chain` updater. This takes multiple patches and applies them
---  left-to-right to get the final value. Contrast this with `patch.join`,
---  which will return a simple precomputed patch but can't express multiple
---  changes to the same field.
+--- Returns an updater that has the same effect as applying each input patch
+--  left-to-right. The implementation strategy has special cases, but usually
+--  this will in the form of a `chain` updater.
+--  Contrast this with `patch.join`, which will return a simple precomputed
+--  patch but can't express multiple changes to the same field.
 --  @param ... A patch
 --  @return An opaque updater
 function patch.chain(...)
-	return setmetatable({n=select('#', ...), ...}, chain_mt)
+	local n = select('#', ...)
+	if n == 0 then
+		return {} -- empty diff
+	elseif n == 1 then
+		return ... -- identity
+	end
+	return setmetatable({n=n, ...}, chain_mt)
 end
 
 local function set(t) local s = {} for _, v in ipairs(t) do s[v] = true end return s end
