@@ -11,6 +11,8 @@ Patches are normal Lua values. Here we used the number 2, but we can
 update a value to whatever we want.
 	value, undo2 = patch.apply(value, "magic")    --       2 -> "magic"
 	value, undo3 = patch.apply(value, {"carpet"}) -- "magic" -> {"carpet"}
+
+### Undo
 Every time you call apply, in addition to the the result value, it will
 also spit out an "undo" patch. This will be an inverse of the input
 patch: if you give the current value and the undo back to
@@ -18,14 +20,18 @@ apply it will give you the original value.
 	value, _ = patch.apply(value, undo3) -- {"carpet"} -> "magic"
 	value, _ = patch.apply(value, undo2) --    "magic" -> 2
 	value, _ = patch.apply(value, undo)  --          2 -> 1
+
+### Merges
 Patch supports more complex operations than simple replacement, though.
-When the patch is a table, then each value in the patch table is
-recursively applied to the input, like so:
+When the patch and the input are both tables, then each value in the
+patch table is recursively applied to the input, like so:
 	t = { a = 1, 'a', 'b', 'c'}
 	t2, _ = patch.apply(t,  {[2] = 2})           -- t2[2]    = 2
 	t3, _ = patch.apply(t2, {a = {age = "old"}}) -- t3.a     = {age = "old"}
 	t4, _ = patch.apply(t3, {a = {age = "new"}}) -- t4.a.age = "new"
-When working with complex types like this, apply makes the
+
+### Mutation
+When working with stateful types like this, apply makes the
 guarantee that it won't modify the input table:
 	print(t == t4)   -- false
 	print(t.a)       -- b
@@ -34,9 +40,11 @@ guarantee that it won't modify the input table:
 But if you'd rather reuse a single instance of a datastructure, you can
 use `patch.apply_inplace` instead.
 	t5, _ = patch.apply_inplace(t4, {a = 3}) -- t4.a = 3
-
+	
 	print(t4 == t5)     -- true
 	print(t4.a == t5.a) -- true
+
+### Updaters
 These two primitive behaviors, replacing and merging, work for many of
 changes you might want to make to a table. However, this can't represent
 everything. For example, if you want to set a field in a table to nil,
@@ -45,9 +53,12 @@ this won't work:
 That's because in Lua, `nil` is the same as `undefined`. instead of
 passing in a field set to `nil`, we've passed in nothing at all!
 
-To fix this we use @{patch.Updaters|Updaters}. An updater is a simple marker that suggests
-that patch should do something special when applying it. For this
-specific example, we can use the `patch.Nil` updater, which will always
-replace the input with nil:
+To fix this we use @{patch.Updaters|Updaters}. An updater is a simple
+marker that suggests that patch should do something special when
+applying it. For this specific example, we can use the `patch.Nil`
+updater, which will always replace the input with nil:
 	patch.apply({field = "set"}, {field = patch.Nil} -- {}, {field = "set"}
-
+Some other important updaters include `patch.chain`, which will "chain"
+patches together, left-to-right, and `patch.insert_i` and
+`patch.remove_i` which are shortcuts for using `table.insert` and
+`table.remove` respectively.

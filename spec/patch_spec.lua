@@ -217,6 +217,27 @@ describe("patch.join()", function()
 	end)
 end)
 
+describe("patch.diff", function()
+	local input = {}
+
+	input.old = {}
+	for i=1, 20 do
+		input.old[math.random()] = tostring(math.random())
+	end
+
+	input.new = {}
+	input.new[patch.Nil] = patch.replace("obj")
+	for i=1, 20 do
+		input.new[math.random()] = tostring(math.random())
+	end
+	input.new[patch.Nil] = patch.Nil
+	
+	input.diff = patch.diff(input.old, input.new)
+	input.is_diff = true
+
+	test(input)
+end)
+
 function test(input)
 	local util = require 'luassert.util'
 	local _old, _new = util.deepcopy(input.old), util.deepcopy(input.new)
