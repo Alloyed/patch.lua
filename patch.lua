@@ -18,6 +18,7 @@ local insert_i_mt     = {INSERT_I=true}
 local setmetatable_mt = {SETMETATABLE=true}
 local chain_mt        = {CHAIN=true}
 local Nil_mt          = {NIL=true}
+local noop_mt         = {NOOP=true}
 
 local mt_set = {
 	[replace_mt]      = 'explicit_replace',
@@ -26,6 +27,7 @@ local mt_set = {
 	[setmetatable_mt] = 'setmetatable',
 	[chain_mt]        = 'chain',
 	[Nil_mt]          = 'replace',
+	[noop_mt]         = 'noop',
 }
 
 local function update_type(diff)
@@ -42,22 +44,34 @@ end
 local updaters = {}
 
 function updaters.replace(orig, diff)
-	return diff, orig
+	if orig == nil then
+		return diff, patch.Nil
+	end
+	return diff, patch.replace(orig)
+end
+
+function updaters.noop(orig, diff)
+	return orig, nil
 end
 
 function updaters.explicit_replace(orig, diff)
-	return diff.v, orig
+	if orig == nil then
+		return diff.v, patch.Nil
+	end
+	return diff.v, patch.replace(orig)
 end
 
 function updaters.merge(orig, diff, mutate)
-	if orig == patch.Nil then
-		-- special case: promote nil to empty table and fill it
+	if update_type(orig) ~= "merge" then
+		-- special case: original is not a mergeable table, instead make a new
+		-- table and merge that
 		local new = {}
 		for k, v in pairs(diff) do
-			local new_v, _ = visit(orig[k], v, mutate)
+			local new_v, _ = visit(nil, v, mutate)
 			new[k] = new_v
 		end
-		return new, patch.Nil
+
+		return new, patch.replace(orig)
 	end
 
 	if not next(diff) then
@@ -81,7 +95,7 @@ function updaters.merge(orig, diff, mutate)
 end
 
 function updaters.insert_i(orig, diff, mutate)
-	assert(orig ~= patch.Nil)
+	assert(orig ~= nil)
 	assert(type(orig) == 'table')
 
 	local i, v = diff.i, diff.v
@@ -98,7 +112,7 @@ function updaters.insert_i(orig, diff, mutate)
 end
 
 function updaters.remove_i(orig, diff, mutate)
-	assert(orig ~= patch.Nil)
+	assert(orig ~= nil)
 	assert(type(orig) == 'table')
 
 	local i = diff.i
@@ -116,7 +130,7 @@ function updaters.remove_i(orig, diff, mutate)
 end
 
 function updaters.setmetatable(orig, diff, mutate)
-	assert(orig ~= patch.Nil)
+	assert(orig ~= nil)
 
 	local mt = diff.mt
 
@@ -132,11 +146,9 @@ function updaters.setmetatable(orig, diff, mutate)
 end
 
 function updaters.chain(orig, diff, mutate)
-	assert(orig ~= patch.Nil)
-
 	local new = orig
 	if diff.n == 0 then
-		return new, {}
+		return new, nil
 	elseif diff.n == 1 then
 		return visit(new, diff[1], mutate)
 	end
@@ -167,9 +179,9 @@ function visit(orig, diff, mutate)
 		return orig, nil -- no-op
 	end
 
-	if orig == nil then
-		orig = patch.Nil
-	end
+	--if orig == nil then
+	--	orig = patch.Nil
+	--end
 
 	local t = update_type(diff)
 
@@ -289,6 +301,11 @@ end
 --- The `nil` updater. When you want to set a field to nil, use this instead of
 --  nil directly.
 patch.Nil = setmetatable({}, Nil_mt)
+
+--- The `noop` updater. This will have the same effect as passing in a
+--  nil, but because it's a reified object you can use it where nil would cause
+--  issues.
+patch.noop = setmetatable({}, noop_mt)
 
 --- Returns a `replace` updater. This is the equivalent of setting the field
 --  directly to the given value. This can be used for anything, including `nil`,
